@@ -24,7 +24,7 @@ public class AppPrincipal {
 				try {
 					pdao.registrar(ObtenerDatosPersona.solicitarDatosPersona());
 				} catch (GenricExceptions e1) {
-					System.err.println(e1);
+					e1.printStackTrace();
 				}
 				break;
 			case 2:
