@@ -23,15 +23,17 @@ import java.sql.SQLException;
 
 import javax.swing.JOptionPane;
 
-import com.educacionit.database.Conexion;
+import static com.educacionit.database.Conexion.conexion;
+import static com.educacionit.util.persona.ObtenerDatosPersona.solicitarDatosPersona;
 import com.educacionit.exceptions.GenricExceptions;
 import com.educacionit.modelos.PersonaVO;
+import com.educacionit.util.persona.ObtenerDatosPersona;
 
 
 public class PersonaDAO {
 
 	public void registrar(PersonaVO persona) throws GenricExceptions {
-		try (PreparedStatement preparedStatement = Conexion.conexion().prepareStatement("INSERT INTO persona(Nombre, Edad, Profesion, Telefono) VALUES (?, ?, ?, ?)", PreparedStatement.RETURN_GENERATED_KEYS)){
+		try (PreparedStatement preparedStatement = conexion().prepareStatement("INSERT INTO persona(Nombre, Edad, Profesion, Telefono) VALUES (?, ?, ?, ?)", PreparedStatement.RETURN_GENERATED_KEYS)){
 			preparedStatement.setString(1, persona.getNombrePersona());
 			preparedStatement.setInt(2, persona.getEdadPersona());
 			preparedStatement.setString(3, persona.getProfesionPersona());
@@ -48,7 +50,7 @@ public class PersonaDAO {
 	
 	
 	public PersonaVO buscarID(Long id) throws GenricExceptions {
-		try (PreparedStatement preparedStatement = Conexion.conexion().prepareStatement("SELECT *FROM persona WHERE Id_persona = ?")){
+		try (PreparedStatement preparedStatement = conexion().prepareStatement("SELECT *FROM persona WHERE Id_persona = ?")){
 			if (validarID(id) == false) {
 				preparedStatement.setLong(1, id);
 				ResultSet resultSet = preparedStatement.executeQuery();
@@ -63,9 +65,28 @@ public class PersonaDAO {
 		return null;
 	}
 	
+	public void actulizar(Long id) throws GenricExceptions {
+		try(PreparedStatement preparedStatement = conexion().prepareStatement("UPDATE persona SET Nombre = ?, Edad = ?, Profesion = ?, Telefono = ? WHERE iD_Persona = ?")){
+			if (validarID(id) == false) {
+				PersonaVO persona = solicitarDatosPersona();
+				preparedStatement.setString(1, persona.getNombrePersona());
+				preparedStatement.setInt(2, persona.getEdadPersona());
+				preparedStatement.setString(3, persona.getProfesionPersona());
+				preparedStatement.setInt(4, persona.getTelefonoPersona());
+				preparedStatement.setLong(5, id);
+				preparedStatement.executeUpdate();
+				JOptionPane.showMessageDialog(null, "Actulizacion exitosa pra el registo con el id \"" + id + "\"");
+				
+			}else {
+				JOptionPane.showMessageDialog(null, "No existe un registro con el id \"" + id + "\"");
+			}
+		}catch (Exception e) {
+			throw new GenricExceptions("Error!! no se pude actulizar eL id: \"" + id + "\"", e);	
+		}
+	}
 	
 	public void elimnar(Long id) throws GenricExceptions {
-		try (PreparedStatement preparedStatement = Conexion.conexion().prepareStatement("DELETE FROM persona WHERE Id_Persona = ?");){
+		try (PreparedStatement preparedStatement = conexion().prepareStatement("DELETE FROM persona WHERE Id_Persona = ?");){
 			if (validarID(id) == false) {
 				preparedStatement.setLong(1, id);
 				preparedStatement.execute();
@@ -83,7 +104,7 @@ public class PersonaDAO {
 	public boolean validarID(Long id) throws GenricExceptions {
 		
 		if(id != null) {
-			try (PreparedStatement preparedStatement = Conexion.conexion().prepareStatement("SELECT COUNT(*) FROM persona WHERE Id_Persona = ?")){
+			try (PreparedStatement preparedStatement = conexion().prepareStatement("SELECT COUNT(*) FROM persona WHERE Id_Persona = ?")){
 				preparedStatement.setLong(1, id);
 				ResultSet resultSet = preparedStatement.executeQuery();
 				if (resultSet.next()) {
